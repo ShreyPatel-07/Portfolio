@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
 
 import { profile } from "@/content/profile";
@@ -28,7 +28,56 @@ const EmberScene = dynamic(
  */
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
+  const mobileTrackRef = useRef<HTMLDivElement>(null);
+  const mobilePosterRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+  const cinematic = !reduced && !isMobile;
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const sync = () => setIsMobile(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const track = mobileTrackRef.current;
+    const poster = mobilePosterRef.current;
+    if (!isMobile || reduced || !track || !poster) return;
+
+    const update = () => {
+      const distance = Math.max(1, track.offsetHeight - window.innerHeight);
+      const progress = Math.min(1, Math.max(0, -track.getBoundingClientRect().top / distance));
+      poster.style.transform = `translateY(${(1 - progress) * 100}%)`;
+    };
+
+    type LenisLike = {
+      on: (event: "scroll", callback: () => void) => void;
+      off: (event: "scroll", callback: () => void) => void;
+    };
+    let lenis: LenisLike | undefined;
+    const bindLenis = () => {
+      const instance = (window as unknown as { __spLenis?: LenisLike }).__spLenis;
+      if (!instance || lenis) return;
+      lenis = instance;
+      lenis.on("scroll", update);
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    bindLenis();
+    const lenisTimer = window.setTimeout(bindLenis, 250);
+    return () => {
+      window.clearTimeout(lenisTimer);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      lenis?.off("scroll", update);
+    };
+  }, [isMobile, reduced]);
+
   // The opening title owns the first two seconds. On a first visit the name
   // converges as that panel lifts; on a repeat visit it plays immediately.
   const [introDelay] = useState(() => {
@@ -44,12 +93,12 @@ export function Hero() {
     offset: ["start start", "end end"],
   });
 
-  const baseScale = useTransform(scrollYProgress, [0, 0.42], [1, reduced ? 1 : 0.94]);
-  const baseOpacity = useTransform(scrollYProgress, [0.02, 0.34], [1, reduced ? 1 : 0]);
-  const baseY = useTransform(scrollYProgress, [0, 1], ["0%", reduced ? "0%" : "-6%"]);
+  const baseScale = useTransform(scrollYProgress, [0, 0.42], [1, cinematic ? 0.94 : 1]);
+  const baseOpacity = useTransform(scrollYProgress, [0.02, 0.34], [1, cinematic ? 0 : 1]);
+  const baseY = useTransform(scrollYProgress, [0, 1], ["0%", cinematic ? "-6%" : "0%"]);
 
   const posterY = useTransform(scrollYProgress, [0.04, 0.46], ["104%", "0%"]);
-  const posterScale = useTransform(scrollYProgress, [0.6, 1], [1, reduced ? 1 : 1.05]);
+  const posterScale = useTransform(scrollYProgress, [0.6, 1], [1, cinematic ? 1.05 : 1]);
   const posterClip = useTransform(
     scrollYProgress,
     [0.1, 0.5],
@@ -97,9 +146,7 @@ export function Hero() {
       </div>
 
       <motion.div
-        style={
-          reduced ? undefined : { scale: baseScale, opacity: baseOpacity, y: baseY }
-        }
+        style={cinematic ? { scale: baseScale, opacity: baseOpacity, y: baseY } : undefined}
         className="shell relative z-10 origin-top"
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -213,7 +260,7 @@ export function Hero() {
       </div>
 
       {/* The poster: the portrait, in full, arriving from below the frame. */}
-      {!reduced ? (
+      {cinematic ? (
         <motion.div
           aria-hidden
           data-surface="ember"
@@ -247,7 +294,7 @@ export function Hero() {
       ) : null}
 
       {/* Letterbox bars close as the poster lands, then open again. */}
-      {!reduced ? (
+      {cinematic ? (
         <>
           <motion.div
             aria-hidden
@@ -264,9 +311,46 @@ export function Hero() {
     </section>
   );
 
+  const flatPortrait = (
+    <div className="border-t border-cream/12 bg-ink md:hidden">
+      <div className="shell py-10">
+        <div className="overflow-hidden rounded-[22px] border border-cream/12">
+          <PortraitStage className="w-full" showMeta={false} />
+        </div>
+      </div>
+    </div>
+  );
+
+  const mobileReveal = (
+    <div ref={mobileTrackRef} className="relative h-[165svh] md:hidden">
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        {stage}
+        <div
+          ref={mobilePosterRef}
+          className="absolute inset-0 z-20 bg-ink will-change-transform"
+          style={{ transform: "translateY(100%)" }}
+        >
+          <PortraitStage className="h-full w-full !aspect-auto" showMeta={false} />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-ink/20" />
+          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 px-6 pb-6">
+            <span className="label text-cream/70">{profile.name} — portrait, 2026</span>
+            <span className="label text-cream/45">Scroll to continue</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (reduced) {
-    return <div ref={ref}>{stage}</div>;
+    return (
+      <div ref={ref}>
+        {stage}
+        {flatPortrait}
+      </div>
+    );
   }
+
+  if (isMobile) return <div ref={ref}>{mobileReveal}</div>;
 
   return (
     <div ref={ref} className="hero-track relative h-[260vh]">

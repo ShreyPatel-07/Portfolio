@@ -25,9 +25,9 @@ import { cn } from "@/lib/utils";
  *
  * On desktop the section is a pinned camera: each project zooms through the
  * next with a parallax inside the frame, while the index, caption and rail
- * follow the scroll. There is no clicking through slides. Touch and
- * reduced-motion users get the draggable contact sheet instead of a 500vh
- * scroll, which is the honest way to keep it usable on a phone.
+ * follow the scroll. There is no clicking through slides. Touch users get a
+ * native snap rail, and reduced-motion desktop users get the draggable contact
+ * sheet instead of a 500vh scroll.
  */
 type ProjectFrame = {
   title: string;
@@ -150,7 +150,9 @@ export function Frames() {
           meta={
             reel
               ? `${frames.length} captures · scroll to travel`
-              : `${frames.length} captures · drag or arrow keys`
+              : compact
+                ? `${frames.length} captures · swipe to travel`
+                : `${frames.length} captures · drag or arrow keys`
           }
           title={
             <h2 id="frames-title" className="display-lg mt-4 text-cream">
@@ -161,7 +163,9 @@ export function Frames() {
             <p>
               {reel
                 ? `Scroll to travel through ${frames.length} shipped products. Each frame zooms through the next while the detail inside it drifts — one continuous move, not a carousel of clicks.`
-                : `${frames.length} shipped products, one frame at a time. Drag the contact sheet or use the arrow keys to move between them.`}
+                : compact
+                  ? `Swipe through ${frames.length} shipped products, one full frame at a time. No rotating stack, no cropped screenshots — just the work moving like the project rail.`
+                  : `${frames.length} shipped products, one frame at a time. Drag the contact sheet or use the arrow keys to move between them.`}
             </p>
           }
         />
@@ -169,12 +173,145 @@ export function Frames() {
 
       {reel ? (
         <ProjectReel />
+      ) : compact ? (
+        <MobileFramesRail />
       ) : (
         <div className="shell relative z-10">
           <ContactSheet />
         </div>
       )}
     </section>
+  );
+}
+
+function MobileFramesRail() {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const cards = [...rail.querySelectorAll<HTMLElement>("[data-frame-card]")];
+      if (!cards.length) return;
+
+      const center = rail.scrollLeft + rail.clientWidth / 2;
+      let closest = 0;
+      let distance = Number.POSITIVE_INFINITY;
+      cards.forEach((card, index) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const nextDistance = Math.abs(cardCenter - center);
+        if (nextDistance < distance) {
+          closest = index;
+          distance = nextDistance;
+        }
+      });
+
+      const max = rail.scrollWidth - rail.clientWidth;
+      setActive(closest);
+      setProgress(max > 0 ? Math.min(1, Math.max(0, rail.scrollLeft / max)) : 1);
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      rail.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  const goTo = (index: number) => {
+    const rail = railRef.current;
+    const card = rail?.querySelector<HTMLElement>(`[data-frame-card="${index}"]`);
+    if (!rail || !card) return;
+    rail.scrollTo({ left: card.offsetLeft - rail.offsetLeft });
+  };
+
+  return (
+    <div className="mt-8">
+      <div className="shell flex items-center justify-between gap-4 border-t border-cream/12 pt-3">
+        <span className="label text-cream/40">
+          <span className="text-flame">{String(active + 1).padStart(2, "0")}</span> /{" "}
+          {String(frames.length).padStart(2, "0")} — contact sheet
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => goTo(Math.max(0, active - 1))}
+            disabled={active === 0}
+            aria-label="Previous frame"
+            className="grid h-8 w-8 place-items-center rounded-full border border-cream/15 text-cream/50 transition-colors disabled:opacity-25"
+          >
+            <span aria-hidden>←</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => goTo(Math.min(frames.length - 1, active + 1))}
+            disabled={active === frames.length - 1}
+            aria-label="Next frame"
+            className="grid h-8 w-8 place-items-center rounded-full border border-cream/15 text-cream/50 transition-colors disabled:opacity-25"
+          >
+            <span aria-hidden>→</span>
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={railRef}
+        aria-label="Field notes — project captures"
+        className="no-scrollbar relative mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--gutter)] pb-2"
+      >
+        {frames.map((frame, index) => (
+          <Link
+            key={frame.src}
+            href={`/work/${frame.slug}`}
+            data-frame-card={index}
+            className="group w-[82vw] max-w-[430px] shrink-0 snap-start"
+          >
+            <div className="relative aspect-[16/10] overflow-hidden border border-cream/15 bg-ink-2">
+              <Image
+                src={frame.src}
+                alt={frame.alt}
+                fill
+                sizes="82vw"
+                priority={index === 0}
+                className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/55 via-transparent to-transparent" />
+              <span className="label absolute bottom-3 right-3 flex items-center gap-2 rounded-full border border-flame/50 bg-ink/70 px-3 py-2 text-flame backdrop-blur-md">
+                Open case study <span aria-hidden>↗</span>
+              </span>
+            </div>
+            <div className="mt-3 border-t border-cream/12 pt-3">
+              <span className="label text-flame">{String(index + 1).padStart(2, "0")}</span>
+              <h3 className="mt-1.5 font-display text-[clamp(1.3rem,5vw,1.7rem)] leading-tight text-cream">
+                {frame.title.split(" — ")[0]}
+              </h3>
+              <p className="mt-1.5 text-[0.8rem] leading-relaxed text-cream/50">{frame.caption}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="shell mt-2">
+        <div className="h-px w-full bg-cream/10">
+          <div
+            className="h-px origin-left bg-flame transition-[width] duration-300 ease-out"
+            style={{ width: `${Math.max(5, progress * 100)}%` }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 

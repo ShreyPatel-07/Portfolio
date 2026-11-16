@@ -31,18 +31,12 @@ import { cn } from "@/lib/utils";
 export function Experience() {
   const reduced = useReducedMotion();
   const trackRef = useRef<HTMLDivElement | null>(null);
-  const mobileTrackRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const detailRef = useRef<HTMLDivElement | null>(null);
   const [openId, setOpenId] = useState<string | null>(experience[0].id);
-  const [mobileIndex, setMobileIndex] = useState(0);
 
   const { scrollYProgress } = useScroll({
     target: trackRef,
-    offset: ["start start", "end end"],
-  });
-  const { scrollYProgress: mobileProgress } = useScroll({
-    target: mobileTrackRef,
     offset: ["start start", "end end"],
   });
 
@@ -51,11 +45,6 @@ export function Experience() {
     experience.findIndex((role) => role.id === openId)
   );
   const active = experience[openIndex];
-  const mobileActive = experience[mobileIndex];
-  const calendarYears = Array.from(new Set(experience.map((role) => role.calendarYear))).sort();
-  const activeYearIndex = Math.max(0, calendarYears.indexOf(mobileActive.calendarYear));
-  const activeYearPosition =
-    (activeYearIndex / Math.max(1, calendarYears.length - 1)) * 100;
 
   useMotionValueEvent(scrollYProgress, "change", (value) => {
     if (reduced) return;
@@ -67,15 +56,6 @@ export function Experience() {
     setOpenId((current) => (current === id ? current : id));
   });
 
-  useMotionValueEvent(mobileProgress, "change", (value) => {
-    if (reduced) return;
-    const next = Math.min(
-      experience.length - 1,
-      Math.max(0, Math.floor(value * experience.length))
-    );
-    setMobileIndex((current) => (current === next ? current : next));
-  });
-
   const jump = (i: number) => {
     const el = trackRef.current;
     if (!el) return;
@@ -84,17 +64,6 @@ export function Experience() {
     window.scrollTo({
       // Land in the middle of the slice so the scroll listener settles there.
       top: top + ((i + 0.5) / experience.length) * range,
-      behavior: "smooth",
-    });
-  };
-
-  const mobileJump = (index: number) => {
-    const el = mobileTrackRef.current;
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    const range = el.offsetHeight - window.innerHeight;
-    window.scrollTo({
-      top: top + ((index + 0.5) / experience.length) * range,
       behavior: "smooth",
     });
   };
@@ -163,7 +132,9 @@ export function Experience() {
           lead={
             <p>
               Three years across SaaS, fintech, compliance and mobile — mostly modernising
-              products that were already in customers&apos; hands. Scroll to walk the career.
+              products that were already in customers&apos; hands.{" "}
+              <span className="md:hidden">Swipe the career deck.</span>
+              <span className="hidden md:inline">Scroll to walk the career.</span>
             </p>
           }
         />
@@ -356,145 +327,7 @@ export function Experience() {
             </div>
           </div>
 
-          {/* Phones: a compact, scroll-driven career deck. */}
-          <div
-            ref={mobileTrackRef}
-            data-career-deck
-            className="relative mt-8 h-[220vh] md:hidden"
-          >
-            <div className="sticky top-[4.5rem] overflow-hidden">
-              <div className="shell">
-                <div className="border-t border-cream/12 pt-4">
-                  <div className="flex items-end justify-between gap-4">
-                    <div>
-                      <span className="label text-cream/40">Career timeline</span>
-                      <div className="mt-1 flex items-baseline gap-3 [perspective:800px]">
-                        <AnimatePresence mode="wait" initial={false}>
-                          <motion.span
-                            key={mobileActive.calendarYear}
-                            initial={{ opacity: 0, y: 16, rotateX: -45 }}
-                            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                            exit={{ opacity: 0, y: -12, rotateX: 35 }}
-                            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-                            className="block font-display text-[clamp(2.8rem,13vw,4rem)] font-light leading-[0.8] tracking-[-0.05em] text-flame"
-                          >
-                            {mobileActive.calendarYear}
-                          </motion.span>
-                        </AnimatePresence>
-                        <span className="label text-[0.62rem] text-cream/35">
-                          {String(mobileIndex + 1).padStart(2, "0")} /{" "}
-                          {String(experience.length).padStart(2, "0")}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="label max-w-[10rem] text-right text-[0.62rem] leading-relaxed text-cream/35">
-                      {mobileActive.period}
-                    </span>
-                  </div>
-
-                  <div className="relative mt-3">
-                    <div aria-hidden className="absolute inset-x-0 top-4 h-px bg-cream/12" />
-                    <motion.div
-                      aria-hidden
-                      initial={false}
-                      animate={{
-                        width: `${((mobileIndex + 1) / experience.length) * 100}%`,
-                      }}
-                      transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute left-0 top-4 h-px bg-flame"
-                    />
-                    <motion.span
-                      aria-hidden
-                      initial={false}
-                      animate={{ left: `${activeYearPosition}%` }}
-                      transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute top-4 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-flame bg-ink"
-                    />
-                    <div className="relative grid grid-cols-4">
-                      {calendarYears.map((year) => {
-                        const target = experience.findIndex(
-                          (role) => role.calendarYear === year
-                        );
-                        const selected = year === mobileActive.calendarYear;
-                        return (
-                          <button
-                            key={year}
-                            type="button"
-                            onClick={() => mobileJump(Math.max(0, target))}
-                            aria-pressed={selected}
-                            className={cn(
-                              "label pb-1 pt-0 text-[0.6rem] transition-colors duration-300",
-                              selected
-                                ? "text-flame"
-                                : "text-cream/30 hover:text-cream/70"
-                            )}
-                          >
-                            {year}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className="mt-2 min-h-0 [perspective:1200px]"
-                  style={{ height: "clamp(250px, calc(100dvh - 21rem), 540px)" }}
-                >
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.article
-                      key={mobileActive.id}
-                      initial={{ opacity: 0, y: 30, rotateX: 8, filter: "blur(6px)" }}
-                      animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, y: -20, rotateX: -5, filter: "blur(6px)" }}
-                      transition={{ duration: 0.46, ease: [0.16, 1, 0.3, 1] }}
-                      className="relative h-full overflow-hidden border border-cream/12 bg-ink-2"
-                    >
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_85%_at_90%_0%,rgba(244,85,29,0.16),transparent_58%)]"
-                      />
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute -right-2 top-8 select-none font-display text-[7rem] font-light leading-none tracking-[-0.06em] text-cream/[0.035]"
-                      >
-                        {String(mobileIndex + 1).padStart(2, "0")}
-                      </div>
-                      <MobileRoleCard role={mobileActive} index={mobileIndex} />
-                    </motion.article>
-                  </AnimatePresence>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between gap-4">
-                                    <span className="label text-[0.6rem] text-cream/30">
-                    Scroll to advance
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => mobileJump(Math.max(0, mobileIndex - 1))}
-                      disabled={mobileIndex === 0}
-                      aria-label="Previous role"
-                      className="grid h-8 w-8 place-items-center rounded-full border border-cream/15 text-cream/50 transition-colors disabled:opacity-25"
-                    >
-                      <span aria-hidden>←</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        mobileJump(Math.min(experience.length - 1, mobileIndex + 1))
-                      }
-                      disabled={mobileIndex === experience.length - 1}
-                      aria-label="Next role"
-                      className="grid h-8 w-8 place-items-center rounded-full border border-cream/15 text-cream/50 transition-colors disabled:opacity-25"
-                    >
-                      <span aria-hidden>→</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <MobileExperienceRail />
         </>
       )}
 
@@ -575,6 +408,173 @@ function RoleContent({ role, index }: { role: Role; index: number }) {
   );
 }
 
+function MobileExperienceRail() {
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const [active, setActive] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const current = experience[active];
+  const calendarYears = Array.from(new Set(experience.map((role) => role.calendarYear))).sort();
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const cards = [...rail.querySelectorAll<HTMLElement>("[data-career-card]")];
+      if (!cards.length) return;
+
+      const center = rail.scrollLeft + rail.clientWidth / 2;
+      let closest = 0;
+      let distance = Number.POSITIVE_INFINITY;
+      cards.forEach((card, index) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const nextDistance = Math.abs(cardCenter - center);
+        if (nextDistance < distance) {
+          closest = index;
+          distance = nextDistance;
+        }
+      });
+
+      const max = rail.scrollWidth - rail.clientWidth;
+      setActive(closest);
+      setProgress(max > 0 ? Math.min(1, Math.max(0, rail.scrollLeft / max)) : 1);
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      rail.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  const goTo = (index: number) => {
+    const rail = railRef.current;
+    const card = rail?.querySelector<HTMLElement>(`[data-career-card="${index}"]`);
+    if (!rail || !card) return;
+    rail.scrollTo({ left: card.offsetLeft - rail.offsetLeft });
+  };
+
+  return (
+    <div className="mt-8 md:hidden">
+      <div className="shell border-t border-cream/12 pt-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <span className="label text-cream/40">Career timeline</span>
+            <div className="mt-1 flex items-baseline gap-3">
+              <span className="font-display text-[clamp(2.8rem,13vw,4rem)] font-light leading-[0.8] tracking-[-0.05em] text-flame">
+                {current.calendarYear}
+              </span>
+              <span className="label text-[0.62rem] text-cream/35">
+                {String(active + 1).padStart(2, "0")} /{" "}
+                {String(experience.length).padStart(2, "0")}
+              </span>
+            </div>
+          </div>
+          <span className="label max-w-[10rem] text-right text-[0.62rem] leading-relaxed text-cream/35">
+            {current.period}
+          </span>
+        </div>
+
+        <div className="relative mt-3">
+          <div aria-hidden className="absolute inset-x-0 top-4 h-px bg-cream/12" />
+          <div
+            aria-hidden
+            className="absolute left-0 top-4 h-px bg-flame transition-[width] duration-500 ease-out"
+            style={{ width: `${((active + 1) / experience.length) * 100}%` }}
+          />
+          <div className="relative grid grid-cols-4">
+            {calendarYears.map((year) => {
+              const target = experience.findIndex((role) => role.calendarYear === year);
+              const selected = year === current.calendarYear;
+              return (
+                <button
+                  key={year}
+                  type="button"
+                  onClick={() => goTo(Math.max(0, target))}
+                  aria-pressed={selected}
+                  className={cn(
+                    "label pb-1 pt-0 text-[0.6rem] transition-colors duration-300",
+                    selected ? "text-flame" : "text-cream/30 hover:text-cream/70"
+                  )}
+                >
+                  {year}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div
+        ref={railRef}
+        aria-label="Experience roles"
+        className="no-scrollbar mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--gutter)] pb-2"
+      >
+        {experience.map((role, index) => (
+          <article
+            key={role.id}
+            data-career-card={index}
+            className="relative w-[86vw] max-w-[430px] shrink-0 snap-start overflow-hidden border border-cream/12 bg-ink-2"
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_85%_at_90%_0%,rgba(244,85,29,0.16),transparent_58%)]"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-2 top-8 select-none font-display text-[7rem] font-light leading-none tracking-[-0.06em] text-cream/[0.035]"
+            >
+              {String(index + 1).padStart(2, "0")}
+            </div>
+            <MobileRoleCard role={role} index={index} />
+          </article>
+        ))}
+      </div>
+
+      <div className="shell mt-2">
+        <div className="h-px w-full bg-cream/10">
+          <div
+            className="h-px origin-left bg-flame transition-[width] duration-300 ease-out"
+            style={{ width: `${Math.max(5, progress * 100)}%` }}
+          />
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-4">
+          <span className="label text-[0.6rem] text-cream/30">Swipe to advance</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => goTo(Math.max(0, active - 1))}
+              disabled={active === 0}
+              aria-label="Previous role"
+              className="grid h-8 w-8 place-items-center rounded-full border border-cream/15 text-cream/50 transition-colors disabled:opacity-25"
+            >
+              <span aria-hidden>←</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo(Math.min(experience.length - 1, active + 1))}
+              disabled={active === experience.length - 1}
+              aria-label="Next role"
+              className="grid h-8 w-8 place-items-center rounded-full border border-cream/15 text-cream/50 transition-colors disabled:opacity-25"
+            >
+              <span aria-hidden>→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * The phone card keeps the role's shape without turning the page into a long
  * document: summary, two selected contributions and the stack. The desktop
@@ -584,7 +584,7 @@ function MobileRoleCard({ role, index }: { role: Role; index: number }) {
   const highlights = role.contributions.slice(0, 2);
 
   return (
-    <div className="relative flex h-full flex-col overflow-y-auto overscroll-contain p-5">
+    <div className="relative flex h-full flex-col p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="label flex items-center gap-2 text-flame/80">
           <span className="h-1.5 w-1.5 rounded-full bg-flame" />

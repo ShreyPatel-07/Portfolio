@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="40" viewBox="0 0 240 40" role="img" aria-label="AegisNow">
+  <g fill="none" fill-rule="evenodd">
+    <path d="M4 28.5 16.5 8 29 28.5h-5.6L16.5 17l-6.9 11.5H4Z" fill="#E9F3EF"/>
+    <path d="M16.5 8 29 28.5h-5.6L16.5 17V8Z" fill="#38C7A3"/>
+    <text x="39" y="27" fill="#E9F3EF" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="1.5">AEGIS</text>
+    <text x="111" y="27" fill="#38C7A3" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="1.5">NOW</text>
+  </g>
+</svg>

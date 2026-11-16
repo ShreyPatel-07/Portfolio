@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="40" viewBox="0 0 240 40" role="img" aria-label="GeneCRM">
+  <g fill="none" fill-rule="evenodd">
+    <circle cx="17" cy="20" r="12" fill="#8E7CFF"/>
+    <path d="M17 9.5v21M9 14.5l16 11M9 25.5l16-11" stroke="#F6F1E7" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+    <circle cx="17" cy="20" r="3.1" fill="#F6F1E7"/>
+    <text x="38" y="27" fill="#F6F1E7" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="1.2">GENE</text>
+    <text x="101" y="27" fill="#C9C1FF" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="1.2">CRM</text>
+  </g>
+</svg>

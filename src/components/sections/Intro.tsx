@@ -7,7 +7,7 @@ import { ActionLink } from "@/components/ui/Button";
 import { PortraitPrint } from "@/components/ui/PortraitPrint";
 
 const statement =
-  "I care about the details most people scroll past — how a form validates, how a dashboard reads at a glance, how a page feels in the first second it loads.";
+  "A product earns trust in the first second — how it loads, how it reads, how it recovers when something breaks.";
 
 /** Section 01 — who I am, in plain language, before any project. */
 export function Intro() {

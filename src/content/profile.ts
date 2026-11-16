@@ -22,7 +22,7 @@ export const profile = {
   yearsExperience: "3+",
   /** Long-form intro copy (Section 02). Split into paragraphs deliberately. */
   intro: [
-    "I'm a front-end–focused full stack developer with 3+ years of experience building, modernising and supporting web and SaaS products. I care about the details most people scroll past: how a form validates, how a dashboard reads at a glance, how a page feels in the first second it loads.",
+    "I'm a front-end–focused full stack developer with 3+ years of experience building, modernising and supporting web and SaaS products. I care about the details that make trust hold: clean loading, readable data, and forms that recover gracefully when something breaks.",
     "Most of my work has been rescue and elevation work — taking a product that works but doesn't feel right, and rebuilding the interface, the design system and the data presentation around it. That means dashboards, data visualisation, authentication flows, reporting, and reusable component libraries that keep a team fast after I've moved on.",
     "The rest is newer: AI-assisted video and motion for launch and walkthrough content, real-time 3D on the web, and a working habit of learning whatever the next build actually needs. I'd rather learn the right tool in a week than defend the wrong one for a year.",
   ],

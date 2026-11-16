@@ -291,6 +291,39 @@ html[data-theme="light"] [data-surface="ember"] {
   }
 }
 
+/* Keep the opening inside a short phone viewport while the mobile portrait
+   reveal still has room to rise. */
+@media (max-width: 767px) and (max-height: 740px) {
+  .hero-stage {
+    padding-top: 4rem;
+    padding-bottom: 0.5rem;
+  }
+  .hero-main {
+    margin-top: 0.5rem;
+  }
+  .hero-name {
+    font-size: clamp(2.7rem, 12.5vw, 3.8rem);
+  }
+  .hero-bottom {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+  }
+  .hero-bottom .body-lg {
+    font-size: 0.88rem;
+    line-height: 1.38;
+  }
+  .hero-stats {
+    margin-top: 0.3rem;
+  }
+  .hero-stats dl > div {
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+  .hero-stats dd {
+    font-size: 1.35rem;
+  }
+}
+
 @utility display-lg {
   font-family: var(--font-display);
   font-weight: 300;

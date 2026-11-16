@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
 
 import { profile } from "@/content/profile";
@@ -34,7 +34,7 @@ export function Hero() {
   const [isMobile, setIsMobile] = useState(false);
   const cinematic = !reduced && !isMobile;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const query = window.matchMedia("(max-width: 767px)");
     const sync = () => setIsMobile(query.matches);
     sync();

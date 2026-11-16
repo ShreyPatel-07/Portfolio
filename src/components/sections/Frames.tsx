@@ -12,7 +12,7 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import ViewfinderFlipCarousel, {
@@ -126,7 +126,7 @@ export function Frames() {
   const [compact, setCompact] = useState(false);
   const reduced = useReducedMotion();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const query = window.matchMedia("(max-width: 1023px)");
     const update = () => setCompact(query.matches);
     update();
